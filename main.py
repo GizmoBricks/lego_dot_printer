@@ -627,7 +627,7 @@ def select_on_display(range_, two_digits_font=True):
 def get_slot_path(slot: int = 0,
                   extension: str = '.py',
                   do_check: bool = False,
-                  check_word: str = 'P1') -> str:
+                  check_word: str = '') -> str:
     """
     Retrieve the path associated with a given slot number
      from the 'projects/.slots' file.
@@ -640,7 +640,7 @@ def get_slot_path(slot: int = 0,
     - do_check (bool, optional): Flag to indicate whether to perform
                                  a file format check (default: False).
     - check_word (str, optional): The word used for file format checking
-                                  (default: 'P1' for PBM ASCII format).
+                                  (default: empty string).
 
     Returns:
     - str: The path corresponding to the provided slot number.
@@ -687,7 +687,8 @@ def get_slot_path(slot: int = 0,
                            'or try another slot.'.format(slot))
 
 
-def select_slot(let_select: bool = True, default_slot: int = 0) -> tuple:
+def select_slot(let_select: bool = True, default_slot: int = 0,
+                check_file: bool = False, word_to_check: str = '') -> tuple:
     """
     Selects a slot based on certain conditions and returns
     the selected slot along with its corresponding path.
@@ -698,6 +699,10 @@ def select_slot(let_select: bool = True, default_slot: int = 0) -> tuple:
                                    If False, selects the default_slot.
     - default_slot (int, optional): The default slot to select
                                     if let_select is False.
+    - check_file (bool, optional): Flag to indicate whether to perform
+                                   a file format check (default: False).
+    - word_to_check (str, optional): The word used for file checking
+                                     (default: empty string).
 
     Returns:
     - Tuple[int, str]: A tuple containing the selected slot (int)
@@ -724,7 +729,8 @@ def select_slot(let_select: bool = True, default_slot: int = 0) -> tuple:
 
     for i in range(start_slot, stop_slot):
         try:
-            path = get_slot_path(i, do_check=True)
+            path = get_slot_path(i, do_check=check_file,
+                                 check_word=word_to_check)
         except (RuntimeError, OSError):
             continue
         else:
@@ -1135,7 +1141,7 @@ y_axis = Axis(Y_MOTOR, Y_GEAR_RATIO, Y_WHEEL_DIAMETER, DOT_DIMENSION, Y_SPEED,
 printing_timer = Timer()
 
 try:
-    _, slot_path = select_slot(ALLOW_TO_SELECT_SLOT, SLOT_TO_PRINT)
+    _, slot_path = select_slot(ALLOW_TO_SELECT_SLOT, SLOT_TO_PRINT, True, 'P1')
 except RuntimeError as error:
     error_warning(error, 'NO SLOTS', 'red')
 except ValueError as error:
