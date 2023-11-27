@@ -32,10 +32,10 @@ How to load PBM file into the Mindstorms Hub:
 8. Now you can get path to this file with the get_slot_path function.
 
 Building instruction for printer:
-ADD_LINK
+ADD_LINK (in progress)
 
 GitHub repository:
-ADD_LINK
+https://github.com/GizmoBricks/lego_dot_printer/
 
 Links:
 GizmoBricksChannel@gmail.com
