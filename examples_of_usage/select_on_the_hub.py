@@ -155,7 +155,7 @@ def select_on_display(range_, two_digits_font=True):
 def get_slot_path(slot: int = 0,
                   extension: str = '.py',
                   do_check: bool = False,
-                  check_word: str = 'P1') -> str:
+                  check_word: str = '') -> str:
     """
     Retrieve the path associated with a given slot number
     from the 'projects/.slots' file.
@@ -168,7 +168,7 @@ def get_slot_path(slot: int = 0,
     - do_check (bool, optional): Flag to indicate whether to perform
                                 a file format check (default: False).
     - check_word (str, optional): The word used for file format checking
-                                (default: 'P1' for PBM ASCII format).
+                                (default: empty string).
 
     Returns:
     - str: The path corresponding to the provided slot number.
