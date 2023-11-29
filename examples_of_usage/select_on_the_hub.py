@@ -162,7 +162,7 @@ def get_slot_path(slot: int = 0,
 
     Args:
     - slot (int, optional): The slot number (0-19 inclusive) to retrieve
-                            the path for.
+                            the path for (default: 0).
     - extension (str, optional): The file extension to append the path
                                 (default: '.py').
     - do_check (bool, optional): Flag to indicate whether to perform
@@ -195,10 +195,12 @@ def get_slot_path(slot: int = 0,
     with open('projects/.slots', 'r') as slots_file:
         slots_content = slots_file.readline()
 
-    parsing_start = slots_content.find((str(slot) + ': '), 0)
+    # Checking both possible slot spellings in the .slot file:
+    parsing_start = slots_content.find((', {}: '.format(slot)), 0)
+    if parsing_start == -1:
+        parsing_start = slots_content.find(('{' + '{}: '.format(slot)), 0)
 
-    if (slots_content.find('1', parsing_start - 1, parsing_start) == -1 and
-            parsing_start != -1):
+    if parsing_start != -1:
         parsing_end = slots_content.find('},', parsing_start)
         id_start = slots_content.find("'id': ", parsing_start, parsing_end) + 6
         id_end = slots_content.find(", '", id_start, parsing_end)

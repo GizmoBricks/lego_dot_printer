@@ -117,6 +117,7 @@ X_ZERO_COLOR = 'red'
 X_ZERO_COLOR_2 = 'black'
 X_END_COLOR = 'yellow'
 
+
 # For future releases:
 # PAPER_SENSOR = hub.port.B.device
 
@@ -396,6 +397,7 @@ class Pen:
     it's set to a positive value.
     All those are implemented outside the Pen class.
     """
+
     def __init__(self, pen_motor,
                  drawing_position: int, non_drawing_position: int,
                  speed: int = 100):
@@ -630,28 +632,28 @@ def get_slot_path(slot: int = 0,
                   check_word: str = '') -> str:
     """
     Retrieve the path associated with a given slot number
-     from the 'projects/.slots' file.
+    from the 'projects/.slots' file.
 
     Args:
     - slot (int, optional): The slot number (0-19 inclusive) to retrieve
-                            the path for.
+                            the path for (default: 0).
     - extension (str, optional): The file extension to append the path
-                                 (default: '.py').
+                                (default: '.py').
     - do_check (bool, optional): Flag to indicate whether to perform
-                                 a file format check (default: False).
+                                a file format check (default: False).
     - check_word (str, optional): The word used for file format checking
-                                  (default: empty string).
+                                (default: empty string).
 
     Returns:
     - str: The path corresponding to the provided slot number.
 
     Raises:
     - ValueError: If the slot is not within
-                  the range 0-19 (both inclusive).
+                the range 0-19 (both inclusive).
     - RuntimeError: If the slot is empty.
                     If the file format check fails.
     - OSError: If the file extension is different
-               from the extension argument.
+            from the extension argument.
 
     Note: the function was tested with Mindstorms app
     and SPIKE Legacy app on Mindstorms hub.
@@ -667,10 +669,12 @@ def get_slot_path(slot: int = 0,
     with open('projects/.slots', 'r') as slots_file:
         slots_content = slots_file.readline()
 
-    parsing_start = slots_content.find((str(slot) + ': '), 0)
+    # Checking both possible slot spellings in the .slot file:
+    parsing_start = slots_content.find((', {}: '.format(slot)), 0)
+    if parsing_start == -1:
+        parsing_start = slots_content.find(('{' + '{}: '.format(slot)), 0)
 
-    if (slots_content.find('1', parsing_start - 1, parsing_start) == -1 and
-            parsing_start != -1):
+    if parsing_start != -1:
         parsing_end = slots_content.find('},', parsing_start)
         id_start = slots_content.find("'id': ", parsing_start, parsing_end) + 6
         id_end = slots_content.find(", '", id_start, parsing_end)
@@ -987,8 +991,8 @@ def calibration():
 
     if BACKLASH_CORRECTION:
         backlash_info = ('Backlash correction is applied. '
-                         'Correction value is {} degrees.'. format(
-                                x_axis.correction_step))
+                         'Correction value is {} degrees.'.format(
+            x_axis.correction_step))
     else:
         backlash_info = 'Backlash correction is not applied.'
 
