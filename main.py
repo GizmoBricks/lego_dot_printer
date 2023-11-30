@@ -667,27 +667,18 @@ def get_slot_path(slot: int = 0,
                          'but it should be in range [0-19].'.format(slot))
 
     with open('projects/.slots', 'r') as slots_file:
-        slots_content = slots_file.readline()
+        slot_data = eval(slots_file.readline()).get(slot)
+    if slot_data:
+        path = 'projects/{}/__init__{}'.format(slot_data('id'), extension)
 
-    # Checking both possible slot spellings in the .slot file:
-    parsing_start = slots_content.find((', {}: '.format(slot)), 0)
-    if parsing_start == -1:
-        parsing_start = slots_content.find(('{' + '{}: '.format(slot)), 0)
-
-    if parsing_start != -1:
-        parsing_end = slots_content.find('},', parsing_start)
-        id_start = slots_content.find("'id': ", parsing_start, parsing_end) + 6
-        id_end = slots_content.find(", '", id_start, parsing_end)
-        path = 'projects/{}/__init__{}'.format(slots_content[id_start:id_end],
-                                               extension)
         # open() can reach OSError, if the file extension is different
         # from the extension argument.
         with open(path) as file:
             if file.readline().split()[0] != check_word and do_check:
-                raise RuntimeError('file format check failed.')
+                raise RuntimeError('File format check failed.')
         return path
     else:
-        raise RuntimeError('Slot {} is empty.\n Try to upload file again, '
+        raise RuntimeError('Slot {} is empty.\nTry to upload file again, '
                            'or try another slot.'.format(slot))
 
 
