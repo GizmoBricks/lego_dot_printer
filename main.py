@@ -669,7 +669,7 @@ def get_slot_path(slot: int = 0,
     with open('projects/.slots', 'r') as slots_file:
         slot_data = eval(slots_file.readline()).get(slot)
     if slot_data:
-        path = 'projects/{}/__init__{}'.format(slot_data('id'), extension)
+        path = 'projects/{}/__init__{}'.format(slot_data.get('id'), extension)
 
         # open() can reach OSError, if the file extension is different
         # from the extension argument.
