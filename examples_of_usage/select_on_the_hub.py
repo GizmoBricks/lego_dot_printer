@@ -152,124 +152,52 @@ def select_on_display(range_, two_digits_font=True):
     return range_[selected]
 
 
-def get_slot_path(slot: int = 0,
-                  extension: str = '.py',
-                  do_check: bool = False,
-                  check_word: str = '') -> str:
+def get_slots_paths(extension: str = '.py',
+                    do_check: bool = False,
+                    check_word: str = '') -> dict:
     """
-    Retrieve the path associated with a given slot number
-    from the 'projects/.slots' file.
+    This function retrieves the paths associated with available slots
+    from the projects/.slots file.
 
     Args:
-    - slot (int, optional): The slot number (0-19 inclusive) to retrieve
-                            the path for (default: 0).
     - extension (str, optional): The file extension to append the path
-                                (default: '.py').
+                                 (default: '.py').
     - do_check (bool, optional): Flag to indicate whether to perform
-                                a file format check (default: False).
+                                 a file format check (default: False).
     - check_word (str, optional): The word used for file format checking
-                                (default: empty string).
+                                  (default: empty string).
 
     Returns:
-    - str: The path corresponding to the provided slot number.
+    - dict: The dictionary of available slots and their paths,
+            or empty dictionary, if no available slots.
 
-    Raises:
-    - ValueError: If the slot is not within
-                the range 0-19 (both inclusive).
-    - RuntimeError: If the slot is empty.
-                    If the file format check fails.
-    - OSError: If the file extension is different
-            from the extension argument.
+    File format check:
+    If the do_check argument is True, the function compares
+    the first word of the file with check_word.
+    If they match, the test is passed.
+    If they are different, that slot-path pair is excluded
+    from the dictionary.
 
     Note: the function was tested with Mindstorms app
     and SPIKE Legacy app on Mindstorms hub.
     If you can test it with SPIKE 3 app on the Spike Prime hub,
     please, give me feedback (GizmoBricksChannel@gmail.com)
     """
-
-    if not (0 <= slot <= 19):
-        raise ValueError('Slot is not in the range 0-19 (both inclusive).\n'
-                         'Check the slot argument. It is {}, '
-                         'but it should be in range [0-19].'.format(slot))
-
     with open('projects/.slots', 'r') as slots_file:
-        slot_data = eval(slots_file.readline()).get(slot)
-    if slot_data:
-        path = 'projects/{}/__init__{}'.format(slot_data.get('id'), extension)
+        slots_dict = eval(slots_file.readline())
 
-        # open() can reach OSError, if the file extension is different
-        # from the extension argument.
-        with open(path) as file:
-            if file.readline().split()[0] != check_word and do_check:
-                raise RuntimeError('File format check failed.')
-        return path
-    else:
-        raise RuntimeError('Slot {} is empty.\nTry to upload file again, '
-                           'or try another slot.'.format(slot))
+    for key in slots_dict:
+        slots_dict[key] = 'projects/{}/__init__{}'.format(
+            slots_dict[key]['id'], extension)
 
-
-def select_slot(let_select: bool = True, default_slot: int = 0,
-                check_file: bool = False, word_to_check: str = '') -> tuple:
-    """
-    Selects a slot based on certain conditions and returns
-    the selected slot along with its corresponding path.
-
-    Args:
-    - let_select (bool, optional): If True, selects a slot
-                                from a predefined range (0 to 19).
-                                If False, selects the default_slot.
-    - default_slot (int, optional): The default slot to select
-                                    if let_select is False.
-
-    Returns:
-    - Tuple[int, str]: A tuple containing the selected slot (int)
-                    and its corresponding path (str).
-
-    Raises:
-    - RuntimeError: If no valid slots are available.
-
-    Note:
-    - This function assumes the existence of external functions:
-        - get_slot_path(slot: int) -> str: Retrieve the path associated
-            with a given slot number from the 'projects/.slots' file.
-        - select_on_display(slots: iterable) -> int: Allows users
-            to interactively select and display a value
-            from a given range on a display.
-    """
-    slots = []
-    paths = []
-
-    if let_select:
-        start_slot, stop_slot = 0, 20
-    else:
-        start_slot, stop_slot = default_slot, default_slot + 1
-
-    for i in range(start_slot, stop_slot):
         try:
-            path = get_slot_path(i, do_check=check_file,
-                                 check_word=word_to_check)
-        except (RuntimeError, OSError):
-            continue
-        else:
-            slots.append(i)
-            paths.append(path)
+            with open(slots_dict[key], 'r') as test_file:
+                if test_file.readline().split()[0] != check_word and do_check:
+                    del slots_dict[key]
+        except OSError:
+            del slots_dict[key]
 
-    if not slots:
-        raise RuntimeError(
-            'No valid slots are available.\n'
-            'All slots are empty, or no one slot contains a correct file.\n'
-            'Try to upload files into slots again\n'
-            'or check files format, it should be PBM ASCII file.\n'
-            'To learn more about PBM files visit: '
-            'https://en.wikipedia.org/wiki/Netpbm')
-
-    if len(slots) == 1:
-        selected_index = 0
-    else:
-        selected_slot = select_on_display(slots)
-        selected_index = slots.index(selected_slot)
-
-    return slots[selected_index], paths[selected_index]
+    return slots_dict
 
 
 # Examples of usage:
@@ -277,20 +205,27 @@ print('Getting slot path from the slot #0 directly '
       'and printing the file data:\n \n')
 # Get slot path from the slot #0 directly:
 slot_number = 0
-path = get_slot_path(slot_number)
-with open(path, 'r') as file:
-    for line in file:
-        print(line)
+paths = get_slots_paths()
+if slot_number in paths:
+    with open(paths[slot_number], 'r') as file:
+        for line in file:
+            print(line)
+else:
+    print('Slot {} is empty.'.format(slot_number))
 
 print(' \n \n')
 
 print('Selecting slot from all available slots on the hub '
       'and printing file data:\n \n')
 # Select from all available slots on the hub:
-slot, path = select_slot()
-with open(path, 'r') as file:
-    for line in file:
-        print(line)
+paths = get_slots_paths()
+if paths:
+    slot_path = paths[select_on_display(sorted(list(paths.keys())))]
+    with open(slot_path, 'r') as file:
+        for line in file:
+            print(line)
+else:
+    print('No available slots.')
 
 print(' \n \n')
 
